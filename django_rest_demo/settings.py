@@ -51,7 +51,7 @@ MIDDLEWARE = [
     'edwin.middleware.MyAuthenticationMiddleware',# 用户权限处理中间件
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'edwin.middleware.PrintMessageMiddleware', # 自定义中间件
+    'edwin.middleware.UncaughtExceptionMiddleware', # 自定义中间件
 ]
 
 
@@ -60,7 +60,7 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': BASE_DIR + '/django.cache',
-        #'TIMEOUT': 60,
+        'TIMEOUT': 60,
         'OPTIONS': {
             'MAX_ENTRIES': 1000,
         }

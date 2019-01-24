@@ -6,8 +6,8 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import generics
-from rest_framework.response import Response
 from rest_framework import exceptions
+from rest_framework.response import Response
 
 from django.http import *
 from django.views.decorators.cache import cache_page
@@ -20,7 +20,7 @@ from serializers import UserModelSerializer, BlogModelSerializer, \
 from models import User, Blog
 from request import MyRequest
 
-from authentication import IsAdminUser, IsSysUser
+from authentication import IsAdminUser, IsSysUser, IsLogin
 # Create your views here.
 
 class MyGenericViewSet(viewsets.GenericViewSet):
@@ -45,6 +45,15 @@ class MyGenericViewSet(viewsets.GenericViewSet):
 
     def permission_denied(self, request, message=None):
         raise exceptions.PermissionDenied(detail=message)
+
+    def handle_exception(self, exc):
+        try:
+            return super(MyGenericViewSet, self).handle_exception(exc)
+        except Exception, e:
+            return Response(data={'detail': e.message})
+        except:
+            return Response(data={'detail': 'unknown error'})
+
 
 class MyModelViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
@@ -94,10 +103,10 @@ class LoginViewSet(MyCreateViewSet):
         try:
             user_object = self.queryset.get(name=user_name)
         except User.DoesNotExist:
-            return Response('Name or password error')
+            raise Exception('Name or password error')
 
         if not check_password_hash(user_object.password, password):
-            return Response('Name or password error')
+            raise Exception('Name or password error')
 
         # 创建新的session key
         request.session.cycle_key()
@@ -128,10 +137,11 @@ class LogoutViewSet(MyCreateViewSet):
 
         return Response('OK')
 
+
 class BlogViewSet(MyModelViewSet):
     queryset = Blog.objects.all()
     serializer_class = BlogModelSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsLogin]
     # authentication_classes = ()
 
     def get_page_param(self, request):

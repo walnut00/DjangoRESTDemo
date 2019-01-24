@@ -1,9 +1,11 @@
 # -*- coding: utf8 -*-
 
 from django.utils.deprecation import MiddlewareMixin
+from django.http.response import JsonResponse
+from rest_framework.response import Response
 from models import User
 
-class PrintMessageMiddleware(MiddlewareMixin):
+class UncaughtExceptionMiddleware(MiddlewareMixin):
     def process_request(self, request):
         print 'process request:', request
 
@@ -15,7 +17,8 @@ class PrintMessageMiddleware(MiddlewareMixin):
         print 'process view:', callback
 
     def process_exception(self, request, exception):
-        print 'process exception', exception
+        data = {'uncaught exception': exception.message}
+        return JsonResponse(data=data)
 
 
 # 认证中间件
