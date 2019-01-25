@@ -5,7 +5,7 @@ from rest_framework.authentication import BaseAuthentication
 class IsAdminUser(BasePermission):
     message = u'the administrator permission is required'
     def has_permission(self, request, view):
-        return request.user and request.user.name == 'admin'
+        return request.user and request.user.name.find('admin')>=1
 
 
 class IsSysUser(BasePermission):

@@ -15,8 +15,7 @@ from django.core.cache import cache
 from django.core.cache import caches # caches['default'], the same as django.core.cache
 from django.utils.translation import LANGUAGE_SESSION_KEY
 
-from serializers import UserModelSerializer, BlogModelSerializer, \
-    LoginSerializer, LogoutSerializer
+from serializers import *
 from models import User, Blog
 from request import MyRequest
 
@@ -77,7 +76,7 @@ class MyListCreateViewSet(mixins.CreateModelMixin,
 
 class UserViewSet(MyModelViewSet):
     queryset = User._default_manager.all()
-    serializer_class = UserModelSerializer
+    serializer_class = UserSerializer
     permission_classes = [IsSysUser]
 
 
@@ -140,7 +139,13 @@ class LogoutViewSet(MyCreateViewSet):
 
 class BlogViewSet(MyModelViewSet):
     queryset = Blog.objects.all()
-    serializer_class = BlogModelSerializer
+    serializer_class = BlogSerializer
+    permission_classes = [IsAdminUser]
+
+
+class BlogsViewSet(MyModelViewSet):
+    queryset = User.objects.all()#Blog.objects.all()
+    serializer_class = BlogsSerializer
     permission_classes = [IsLogin]
     # authentication_classes = ()
 
@@ -157,10 +162,10 @@ class BlogViewSet(MyModelViewSet):
         if data is not None:
             return Response(data)
 
-        self.queryset = self.queryset.filter(author=request.user)
+        self.queryset = self.queryset.filter(id=request.user.id)
 
         # 调用基类方法
-        response = super(BlogViewSet, self).list(request, *args, **kwargs)
+        response = super(BlogsViewSet, self).list(request, *args, **kwargs)
 
         # 缓存
         cache.set('blogs_{}_{}'.format(page, page_size), response.data)

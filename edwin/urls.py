@@ -7,10 +7,13 @@ from . import views
 # url路由
 router = DefaultRouter()
 # need to set base_name，otherwise will reporut：AttributeError: 'QuerySet' object has no attribute 'model'
-router.register(r'blogs', views.BlogViewSet, basename='blogs')
+
+router.register(r'blog', views.BlogViewSet, basename='blog')
+router.register(r'blogs', views.BlogsViewSet, basename='blogs')
 router.register(r'login', views.LoginViewSet, basename=u'登陆')
 router.register(r'users', views.UserViewSet, basename=u'用户管理')
 router.register(r'logout', views.LogoutViewSet, basename=u'登出')
+
 urlpatterns = [
     url(r'', include(router.urls)),
     #url(r'', views.BlogDetail.as_view()),

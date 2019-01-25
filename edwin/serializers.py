@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import StringRelatedField
+from rest_framework.serializers import HyperlinkedRelatedField
 
 from models import *
 import bcrypt
 from werkzeug.security import generate_password_hash
 
-class UserModelSerializer(ModelSerializer):
+class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'name', 'password')
 
     @property
     def validated_data(self):
-        validated = super(UserModelSerializer, self).validated_data
+        validated = super(UserSerializer, self).validated_data
         password = validated.get('password')
 
         assert password not in (None, '')
@@ -34,8 +34,16 @@ class LogoutSerializer(ModelSerializer):
         fields = ()
 
 
-class BlogModelSerializer(ModelSerializer):
-    author_name = StringRelatedField(source='User.name', label=u'用户名')#, read_only=True)
+class BlogSerializer(ModelSerializer):
     class Meta:
         model = Blog
-        fields = ('id', 'title', 'author', 'author_name', 'content')
+        fields = ('title', 'content')
+
+
+class BlogsSerializer(ModelSerializer):
+    blogs = HyperlinkedRelatedField(many=True, read_only=True, view_name='blog-detail')
+    #blogs = BlogSerializer(many=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'blogs')
