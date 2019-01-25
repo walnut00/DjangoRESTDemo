@@ -157,6 +157,8 @@ class BlogViewSet(MyModelViewSet):
         if data is not None:
             return Response(data)
 
+        self.queryset = self.queryset.filter(author=request.user)
+
         # 调用基类方法
         response = super(BlogViewSet, self).list(request, *args, **kwargs)
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import StringRelatedField
+
 from models import *
 import bcrypt
 from werkzeug.security import generate_password_hash
@@ -33,6 +35,7 @@ class LogoutSerializer(ModelSerializer):
 
 
 class BlogModelSerializer(ModelSerializer):
+    author_name = StringRelatedField(source='User.name', label=u'用户名')#, read_only=True)
     class Meta:
         model = Blog
-        fields = ('id', 'title', 'author', 'content')
+        fields = ('id', 'title', 'author', 'author_name', 'content')

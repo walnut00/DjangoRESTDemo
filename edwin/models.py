@@ -6,13 +6,15 @@ from django.db import models
 # Create your models here.
 
 class User(models.Model):
-    name = models.fields.CharField(max_length=32)
-    password = models.fields.CharField(max_length=128)
-    email = models.fields.CharField(max_length=128)
+    name = models.CharField(max_length=32)
+    password = models.CharField(max_length=128)
+    email = models.CharField(max_length=128)
 
+    def __str__(self):
+        return '{}.{}'.format(self.id, self.name)
 
 class Blog(models.Model):
-    title = models.fields.CharField(max_length=128)
-    author = models.fields.CharField(max_length=32)
-    content = models.fields.TextField()
-    click = models.fields.IntegerField(null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_user')
+    title = models.CharField(max_length=128)
+    content = models.TextField()
+    click = models.IntegerField(null=True)
