@@ -44,12 +44,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    #'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     #'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'edwin.middleware.MySessionMiddlereare',
     'edwin.middleware.MyAuthenticationMiddleware',# 用户权限处理中间件
-    'django.contrib.messages.middleware.MessageMiddleware',
+    #'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'edwin.middleware.UncaughtExceptionMiddleware', # 自定义中间件
 ]
@@ -67,10 +68,12 @@ CACHES = {
     }
 }
 
-# SESSION引擎配置
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-# 配置session cookie名称
-SESSION_COOKIE_NAME = 'user_token'
+# # SESSION引擎配置
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# # 配置session cookie名称
+# SESSION_COOKIE_NAME = 'user_token'
+# # 最大存活时间，秒
+# SESSION_COOKIE_AGE = 60
 
 # REST框架配置
 REST_FRAMEWORK = {

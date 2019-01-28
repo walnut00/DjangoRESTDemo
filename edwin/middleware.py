@@ -1,9 +1,13 @@
 # -*- coding: utf8 -*-
-
+import json
+from collections import OrderedDict
 from django.utils.deprecation import MiddlewareMixin
 from django.http.response import JsonResponse
+from django.conf import settings
 from rest_framework.response import Response
+
 from models import User
+from sessions import Session
 
 class UncaughtExceptionMiddleware(MiddlewareMixin):
     def process_request(self, request):
@@ -21,7 +25,8 @@ class UncaughtExceptionMiddleware(MiddlewareMixin):
         return JsonResponse(data=data)
 
 
-# 认证中间件
+# 认证中间件，根据cookie从session中解析出user信息
+# 需要配合django自带的session中间件
 class MyAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
         if not hasattr(request, '_cached_user'):
@@ -35,3 +40,27 @@ class MyAuthenticationMiddleware(MiddlewareMixin):
                 request._cached_user = None
 
         request.user = request._cached_user
+
+# 自定义session中间件
+class MySessionMiddlereare(MiddlewareMixin):
+    def process_request(self, request):
+        # 解析token
+        user_token = request.COOKIES.get('user_token')
+
+        # 解析session
+        session = Session()
+        if user_token is not None:
+            session.load(user_token)
+
+        request.session = session
+
+    def process_response(self, request, response):
+        session = request.session
+        if session is not None:
+            user_token = session.get('user_token')
+
+            # 保存session至redis
+            if user_token is not None:
+                session.save(user_token)
+
+        return response

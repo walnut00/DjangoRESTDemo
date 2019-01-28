@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from collections import OrderedDict
+from uuid import uuid4
 from werkzeug.security import check_password_hash
 
 from django.shortcuts import render
@@ -92,6 +94,9 @@ class LoginViewSet(MyCreateViewSet):
         :param kwargs:
         :return:
         """
+        if request.session.get('user_token') is not None:
+            raise Exception(u'do not need login')
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -107,17 +112,18 @@ class LoginViewSet(MyCreateViewSet):
         if not check_password_hash(user_object.password, password):
             raise Exception('Name or password error')
 
-        # 创建新的session key
-        request.session.cycle_key()
-        user_token = request.session.session_key
+        # 生成usertoken
+        user_token = uuid4().hex
+        # request.session.cycle_key() # 使用django自带的session机制，调用此函数生成session id
 
-        # 返回user token
-        response = Response(user_token)
-        response.set_cookie('user_token', user_token)
-
-        # 保存session信息
+        # 设置session信息，在session中间件中进行存储
+        request.session['user_token'] = user_token
         request.session['user_name'] = user_name
         request.session['user_id'] = user_object.id
+
+        # cookie中，返回usertoken
+        response = Response(user_token)
+        response.set_cookie('user_token', value=user_token)
         return response
 
 
@@ -126,13 +132,13 @@ class LogoutViewSet(MyCreateViewSet):
     serializer_class = LogoutSerializer
 
     def create(self, request, *args, **kwargs):
-        # remember language choice saved to session
-        language = request.session.get(LANGUAGE_SESSION_KEY)
-
+        # # remember language choice saved to session
+        # language = request.session.get(LANGUAGE_SESSION_KEY)
+        #
         request.session.flush()
         request.user = None
-        if language is not None:
-            request.session[LANGUAGE_SESSION_KEY] = language
+        # if language is not None:
+        #     request.session[LANGUAGE_SESSION_KEY] = language
 
         return Response('OK')
 
