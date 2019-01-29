@@ -94,9 +94,6 @@ class LoginViewSet(MyCreateViewSet):
         :param kwargs:
         :return:
         """
-        if request.session.get('user_token') is not None:
-            raise Exception(u'do not need login')
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -112,9 +109,7 @@ class LoginViewSet(MyCreateViewSet):
         if not check_password_hash(user_object.password, password):
             raise Exception('Name or password error')
 
-        # 生成usertoken
-        user_token = uuid4().hex
-        # request.session.cycle_key() # 使用django自带的session机制，调用此函数生成session id
+        user_token = request.session.get('user_token') or uuid4().hex
 
         # 设置session信息，在session中间件中进行存储
         request.session['user_token'] = user_token
@@ -134,8 +129,9 @@ class LogoutViewSet(MyCreateViewSet):
     def create(self, request, *args, **kwargs):
         # # remember language choice saved to session
         # language = request.session.get(LANGUAGE_SESSION_KEY)
-        #
-        request.session.flush()
+
+        user_token = request.COOKIE.get('user_token')
+        request.session.flush(user_token)
         request.user = None
         # if language is not None:
         #     request.session[LANGUAGE_SESSION_KEY] = language

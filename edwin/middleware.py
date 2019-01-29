@@ -29,38 +29,39 @@ class UncaughtExceptionMiddleware(MiddlewareMixin):
 # 需要配合django自带的session中间件
 class MyAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        if not hasattr(request, '_cached_user'):
-            user_token = request.COOKIES.get('user_token')
-            user_id = request.session.get('user_id')
-            user_id = User._meta.pk.to_python(user_id)
-            if user_id is not None:
-                request._cached_user = User._default_manager.get(id=user_id)
-                print 'Auth Middleware:', user_token, request._cached_user.name
-            else:
-                request._cached_user = None
+        if hasattr(request, '_cached_user'):
+            request.user = request._cached_user
+            return
 
+        request.user = None
+
+        # token和session
+        user_token = request.COOKIES.get('user_token')
+        session = request.session
+        if session is None:
+            return
+
+        # 解析user信息
+        request._cached_user = User()
+        request._cached_user.id = session.get('user_id')
+        request._cached_user.name = session.get('name')
         request.user = request._cached_user
+        print 'Auth Middleware:', user_token, request._cached_user.name
+
 
 # 自定义session中间件
 class MySessionMiddlereare(MiddlewareMixin):
     def process_request(self, request):
         # 解析token
         user_token = request.COOKIES.get('user_token')
-
         # 解析session
-        session = Session()
-        if user_token is not None:
-            session.load(user_token)
-
-        request.session = session
+        request.session = Session.load(key=user_token)
 
     def process_response(self, request, response):
         session = request.session
-        if session is not None:
-            user_token = session.get('user_token')
 
-            # 保存session至redis
-            if user_token is not None:
-                session.save(user_token)
+        if session is not None and len(session) > 0:
+            user_token = session.get('user_token')
+            session.save(user_token)
 
         return response
