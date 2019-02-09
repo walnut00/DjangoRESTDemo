@@ -58,14 +58,23 @@ MIDDLEWARE = [
 
 # 缓存配置
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': BASE_DIR + '/django.cache',
-        'TIMEOUT': 60,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {"max_connections": 100}
+            # "PASSWORD": "密码",
         }
     }
+    # 'default': {
+    #     'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+    #     'LOCATION': BASE_DIR + '/django.cache',
+    #     'TIMEOUT': 60,
+    #     'OPTIONS': {
+    #         'MAX_ENTRIES': 1000,
+    #     }
+    # }
 }
 
 # # SESSION引擎配置
@@ -131,8 +140,14 @@ WSGI_APPLICATION = 'django_rest_demo.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'djrest',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
     }
 }
 

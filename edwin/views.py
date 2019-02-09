@@ -65,6 +65,31 @@ class MyModelViewSet(mixins.CreateModelMixin,
     pass
 
 
+class MyCachedModelViewSet(MyModelViewSet):
+    def get_page_param(self, request):
+        page = request.query_params.get(self.paginator.page_query_param, 1)
+        page_size = request.query_params.get(self.paginator.page_size_query_param, self.paginator.page_size)
+        return page, page_size
+
+    def list(self, request, *args, **kwargs):
+        page, page_size = self.get_page_param(request)
+        cached_key = '{}_{}_{}_{}'.format(request.user.name, self.basename, page, page_size)
+
+        # 从cache加载数据
+        data = cache.get(cached_key)
+        if data is not None:
+            return Response(data)
+
+        self.queryset = self.queryset.filter(id=request.user.id)
+
+        # 调用基类方法
+        response = super(MyCachedModelViewSet, self).list(request, *args, **kwargs)
+
+        # 缓存
+        cache.set(cached_key, response.data)
+        return response
+
+
 class MyCreateViewSet(mixins.CreateModelMixin,
                       MyGenericViewSet):
     pass
@@ -117,7 +142,7 @@ class LoginViewSet(MyCreateViewSet):
         request.session['user_id'] = user_object.id
 
         # cookie中，返回usertoken
-        response = Response(user_token)
+        response = Response({'user_token': user_token})
         response.set_cookie('user_token', value=user_token)
         return response
 
@@ -130,7 +155,7 @@ class LogoutViewSet(MyCreateViewSet):
         # # remember language choice saved to session
         # language = request.session.get(LANGUAGE_SESSION_KEY)
 
-        user_token = request.COOKIE.get('user_token')
+        user_token = request.COOKIES.get('user_token')
         request.session.flush(user_token)
         request.user = None
         # if language is not None:
@@ -139,39 +164,27 @@ class LogoutViewSet(MyCreateViewSet):
         return Response('OK')
 
 
-class BlogViewSet(MyModelViewSet):
+class BlogViewSet(MyCachedModelViewSet):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
     permission_classes = [IsAdminUser]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        data['author_id'] = request.user.id
 
-class BlogsViewSet(MyModelViewSet):
+        self.queryset.create(**data)
+        return Response('OK')
+
+
+class UsersBlogViewSet(MyCachedModelViewSet):
     queryset = User.objects.all()#Blog.objects.all()
-    serializer_class = BlogsSerializer
+    serializer_class = UsersBlogSerializer
     permission_classes = [IsLogin]
     # authentication_classes = ()
 
-    def get_page_param(self, request):
-        page = request.query_params.get(self.paginator.page_query_param, 1)
-        page_size = request.query_params.get(self.paginator.page_size_query_param, self.paginator.page_size)
-        return page, page_size
-
-    def list(self, request, *args, **kwargs):
-        page, page_size = self.get_page_param(request)
-
-        # 从cache加载数据
-        data = cache.get('blogs_{}_{}'.format(page, page_size))
-        if data is not None:
-            return Response(data)
-
-        self.queryset = self.queryset.filter(id=request.user.id)
-
-        # 调用基类方法
-        response = super(BlogsViewSet, self).list(request, *args, **kwargs)
-
-        # 缓存
-        cache.set('blogs_{}_{}'.format(page, page_size), response.data)
-        return response
 
 
 @cache_page(60*15)

@@ -44,7 +44,7 @@ class MyAuthenticationMiddleware(MiddlewareMixin):
         # 解析user信息
         request._cached_user = User()
         request._cached_user.id = session.get('user_id')
-        request._cached_user.name = session.get('name')
+        request._cached_user.name = session.get('user_name')
         request.user = request._cached_user
         print 'Auth Middleware:', user_token, request._cached_user.name
 
@@ -60,7 +60,7 @@ class MySessionMiddlereare(MiddlewareMixin):
     def process_response(self, request, response):
         session = request.session
 
-        if session is not None and len(session) > 0:
+        if session is not None and session.changed:
             user_token = session.get('user_token')
             session.save(user_token)
 

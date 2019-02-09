@@ -40,7 +40,7 @@ class BlogSerializer(ModelSerializer):
         fields = ('title', 'content')
 
 
-class BlogsSerializer(ModelSerializer):
+class UsersBlogSerializer(ModelSerializer):
     blogs = HyperlinkedRelatedField(many=True, read_only=True, view_name='blog-detail')
     #blogs = BlogSerializer(many=True)
 
