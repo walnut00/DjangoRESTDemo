@@ -80,7 +80,7 @@ class MyCachedModelViewSet(MyModelViewSet):
         if data is not None:
             return Response(data)
 
-        self.queryset = self.queryset.filter(id=request.user.id)
+        self.queryset = self.queryset.filter(author_id=request.user.id)
 
         # 调用基类方法
         response = super(MyCachedModelViewSet, self).list(request, *args, **kwargs)
