@@ -3,3 +3,5 @@ django-rest-framework
 werkzeug
 bcrypt
 django-redis
+MySQL-python>=1.2.3
+requests
